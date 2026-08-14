@@ -1,32 +1,34 @@
 'use client';
+
 import React, { use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Clock, Share2, Bookmark } from 'lucide-react';
 import * as DataSources from '@/lib/data';
 
+// Define flexible Article interface
+interface Article {
+  id?: string;
+  title?: string;
+  category?: string;
+  author?: string;
+  timestamp?: string;
+  imageUrl?: string;
+  [key: string]: any;
+}
+
 export default function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
 
-  // Automatically gather ALL exported articles/arrays from lib/data.ts
-  const allArticles = Object.values(DataSources).flatMap(source => {
+  // Safely collect all articles across exports
+  const rawSources = Object.values(DataSources) as any[];
+  const allArticles: Article[] = rawSources.flatMap(source => {
     if (Array.isArray(source)) return source;
     if (source && typeof source === 'object' && 'id' in source) return [source];
     return [];
   });
 
-  // Find the clicked article by ID, or fallback gracefully
-  const article = allArticles.find(a => a?.id === resolvedParams.id) || allArticles[0];
-
-  if (!article) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Article Not Found</h1>
-          <Link href="/" className="text-emerald-400 underline">Back to Home</Link>
-        </div>
-      </div>
-    );
-  }
+  // Find article by matching ID
+  const article: Article = allArticles.find(a => a?.id === resolvedParams.id) || allArticles[0] || {};
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased">
@@ -59,7 +61,7 @@ export default function ArticlePage({ params }: { params: Promise<{ id: string }
               {article.category || 'Sports'}
             </span>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white leading-tight">
-              {article.title}
+              {article.title || 'Article Content'}
             </h1>
             <div className="flex items-center gap-4 text-sm text-slate-400 border-b border-slate-800 pb-6">
               <span>By <strong className="text-slate-200">{article.author || 'AfriSport Staff'}</strong></span>
@@ -76,7 +78,7 @@ export default function ArticlePage({ params }: { params: Promise<{ id: string }
             <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-900 border border-slate-800">
               <img 
                 src={article.imageUrl} 
-                alt={article.title} 
+                alt={article.title || 'Article Image'} 
                 className="w-full h-full object-cover"
               />
             </div>
@@ -88,7 +90,7 @@ export default function ArticlePage({ params }: { params: Promise<{ id: string }
               {article.title}
             </p>
             <p>
-              Stay tuned to AfriSport Hub for real-time coverage, tactical breakdowns, and full highlights from this story as details unfold.
+              Stay tuned to AfriSport Hub for real-time coverage, tactical breakdowns, and full highlights as details unfold.
             </p>
           </div>
         </article>
